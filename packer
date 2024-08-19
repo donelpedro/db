@@ -1,0 +1,51 @@
+# Define the Packer version required for this configuration
+packer {
+  required_version = ">= 1.8.0"
+}
+
+# Define the builder for GCP
+source "googlecompute" "rhel9" {
+  # Required variables
+  project_id = "<YOUR_PROJECT_ID>"
+  region     = "<YOUR_REGION>"
+  zone       = "<YOUR_ZONE>"
+  
+  # Use the RHEL 9 base image
+  source_image_family = "rhel-9"
+  source_image_project_id = "rhel-cloud"
+
+  # Define the machine type
+  machine_type = "n1-standard-1"
+
+  # Set the disk size and type
+  disk_size  = 10
+  disk_type   = "pd-standard"
+
+  # Define the network settings
+  network      = "default"
+  subnetwork   = "default"
+  
+  # Define the startup script or commands to run during the image build
+  ssh_username = "packer"
+  image_name   = "rhel9-image"
+  image_family = "rhel-9-image-family"
+}
+
+# Define the provisioner to customize the image
+build {
+  sources = [
+    "source.googlecompute.rhel9"
+  ]
+
+  provisioner "shell" {
+    inline = [
+      "sudo yum update -y",
+      "sudo yum install -y vim git"
+    ]
+  }
+}
+
+# Define the post-processor to push the image to a GCP image registry
+post-processor "googlecompute-image" {
+  name = "rhel9-image"
+}
